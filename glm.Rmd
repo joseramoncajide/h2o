@@ -13,15 +13,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 # install.packages("h2o")
-
 library(h2o)
 
 h2o.init(nthreads = 4, max_mem_size = "2G")
 
-# http://localhost:54321
-
-h2o.clusterInfo()
-
+# h2o.clusterInfo()
 ```
 
 Generalized Linear Models (GLM): Provides flexible generalization of
@@ -41,14 +37,19 @@ summary(airlines.hex)
 # View quantiles and histograms
 #high_na_columns = h2o.ignoreColumns(data = airlines.hex)
 quantile(x = airlines.hex$ArrDelay, na.rm = TRUE)
+```
+
+```{r histogram}
 h2o.hist(airlines.hex$ArrDelay)
 ```
+
 
 #### Find number of flights by airport
 
 ```{r}
 originFlights = h2o.group_by(data = airlines.hex, by = "Origin", nrow("Origin"), gb.control=list(na.methods="rm"))
 originFlights.R = as.data.frame(originFlights)
+knitr::kable(head(originFlights.R))
 ```
 
 #### Find number of flights per month
@@ -56,6 +57,7 @@ originFlights.R = as.data.frame(originFlights)
 ```{r}
 flightsByMonth = h2o.group_by(data = airlines.hex, by = "Month", nrow("Month"),gb.control=list(na.methods="rm"))
 flightsByMonth.R = as.data.frame(flightsByMonth)
+knitr::kable(head(flightsByMonth.R))
 ```
 
 #### Find months with the highest cancellation ratio
@@ -66,6 +68,7 @@ cancellationsByMonth = h2o.group_by(data = airlines.hex, by = "Month", sum("Canc
 cancellation_rate = cancellationsByMonth$sum_Cancelled/flightsByMonth$nrow
 rates_table = h2o.cbind(flightsByMonth$Month, cancellation_rate)
 rates_table.R = as.data.frame(rates_table)
+knitr::kable(head(rates_table.R))
 ```
 
 #### Construct test and train sets using sampling
@@ -103,6 +106,13 @@ airlines.glm <- h2o.glm(training_frame=airlines.train, x=X, y=Y, family = "binom
 ```{r}
 summary(airlines.glm)
 ```
+
+#### Coefficients
+
+```{r}
+h2o.coef(airlines.glm)
+```
+
 
 #### Variable Importances
 

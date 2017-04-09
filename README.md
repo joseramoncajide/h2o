@@ -11,4 +11,4 @@ other than a Gaussian (normal) distribution. GLM unifies various other
 statistical models, including Poisson, linear, logistic, and others when using `1
 and `2 regularization.
 
-[H2O GLM](glm.Rmd)
+[H2O GLM](glm.md)

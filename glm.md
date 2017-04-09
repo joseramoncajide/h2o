@@ -5,7 +5,6 @@ H20: Generalized Linear Models (GLM)
 
 ``` r
 # install.packages("h2o")
-
 library(h2o)
 ```
 
@@ -43,12 +42,12 @@ h2o.init(nthreads = 4, max_mem_size = "2G")
     ##  Connection successful!
     ## 
     ## R is connected to the H2O cluster: 
-    ##     H2O cluster uptime:         1 hours 2 minutes 
+    ##     H2O cluster uptime:         8 minutes 41 seconds 
     ##     H2O cluster version:        3.10.3.6 
-    ##     H2O cluster version age:    1 month and 18 days  
-    ##     H2O cluster name:           H2O_started_from_R_JOSE_syi657 
+    ##     H2O cluster version age:    1 month and 19 days  
+    ##     H2O cluster name:           H2O_started_from_R_JOSE_yps594 
     ##     H2O cluster total nodes:    1 
-    ##     H2O cluster total memory:   1.76 GB 
+    ##     H2O cluster total memory:   1.61 GB 
     ##     H2O cluster total cores:    8 
     ##     H2O cluster allowed cores:  4 
     ##     H2O cluster healthy:        TRUE 
@@ -58,25 +57,8 @@ h2o.init(nthreads = 4, max_mem_size = "2G")
     ##     R Version:                  R version 3.3.1 (2016-06-21)
 
 ``` r
-# http://localhost:54321
-
-h2o.clusterInfo()
+# h2o.clusterInfo()
 ```
-
-    ## R is connected to the H2O cluster: 
-    ##     H2O cluster uptime:         1 hours 2 minutes 
-    ##     H2O cluster version:        3.10.3.6 
-    ##     H2O cluster version age:    1 month and 18 days  
-    ##     H2O cluster name:           H2O_started_from_R_JOSE_syi657 
-    ##     H2O cluster total nodes:    1 
-    ##     H2O cluster total memory:   1.76 GB 
-    ##     H2O cluster total cores:    8 
-    ##     H2O cluster allowed cores:  4 
-    ##     H2O cluster healthy:        TRUE 
-    ##     H2O Connection ip:          localhost 
-    ##     H2O Connection port:        54321 
-    ##     H2O Connection proxy:       NA 
-    ##     R Version:                  R version 3.3.1 (2016-06-21)
 
 Generalized Linear Models (GLM): Provides flexible generalization of ordinary linear regression for response variables with error distribution models other than a Gaussian (normal) distribution. GLM unifies various other statistical models, including Poisson, linear, logistic, and others when using `1 and`2 regularization.
 
@@ -180,21 +162,37 @@ quantile(x = airlines.hex$ArrDelay, na.rm = TRUE)
 h2o.hist(airlines.hex$ArrDelay)
 ```
 
-![](glm_files/figure-markdown_github/unnamed-chunk-3-1.png)
+![](glm_files/figure-markdown_github/histogram-1.png)
 
 #### Find number of flights by airport
 
 ``` r
 originFlights = h2o.group_by(data = airlines.hex, by = "Origin", nrow("Origin"), gb.control=list(na.methods="rm"))
 originFlights.R = as.data.frame(originFlights)
+knitr::kable(head(originFlights.R))
 ```
+
+| Origin |  nrow\_Origin|
+|:-------|-------------:|
+| ABE    |            59|
+| ABQ    |           876|
+| ACY    |            31|
+| ALB    |            75|
+| AMA    |            11|
+| ANC    |             1|
 
 #### Find number of flights per month
 
 ``` r
 flightsByMonth = h2o.group_by(data = airlines.hex, by = "Month", nrow("Month"),gb.control=list(na.methods="rm"))
 flightsByMonth.R = as.data.frame(flightsByMonth)
+knitr::kable(head(flightsByMonth.R))
 ```
+
+|  Month|  nrow\_Month|
+|------:|------------:|
+|      1|        41979|
+|     10|         1999|
 
 #### Find months with the highest cancellation ratio
 
@@ -209,7 +207,13 @@ cancellationsByMonth = h2o.group_by(data = airlines.hex, by = "Month", sum("Canc
 cancellation_rate = cancellationsByMonth$sum_Cancelled/flightsByMonth$nrow
 rates_table = h2o.cbind(flightsByMonth$Month, cancellation_rate)
 rates_table.R = as.data.frame(rates_table)
+knitr::kable(head(rates_table.R))
 ```
+
+|  Month|  sum\_Cancelled|
+|------:|---------------:|
+|      1|       0.0254175|
+|     10|       0.0095048|
 
 #### Construct test and train sets using sampling
 
@@ -222,22 +226,22 @@ head(airlines.train)
 ```
 
     ##   Year Month DayofMonth DayOfWeek DepTime CRSDepTime ArrTime CRSArrTime
-    ## 1 1987    10         15         4     729        730     903        849
-    ## 2 1987    10         17         6     741        730     918        849
+    ## 1 1987    10         14         3     741        730     912        849
+    ## 2 1987    10         15         4     729        730     903        849
     ## 3 1987    10         18         7     729        730     847        849
     ## 4 1987    10         19         1     749        730     922        849
     ## 5 1987    10         21         3     728        730     848        849
     ## 6 1987    10         22         4     728        730     852        849
     ##   UniqueCarrier FlightNum TailNum ActualElapsedTime CRSElapsedTime AirTime
-    ## 1            PS      1451      NA                94             79     NaN
-    ## 2            PS      1451      NA                97             79     NaN
+    ## 1            PS      1451      NA                91             79     NaN
+    ## 2            PS      1451      NA                94             79     NaN
     ## 3            PS      1451      NA                78             79     NaN
     ## 4            PS      1451      NA                93             79     NaN
     ## 5            PS      1451      NA                80             79     NaN
     ## 6            PS      1451      NA                84             79     NaN
     ##   ArrDelay DepDelay Origin Dest Distance TaxiIn TaxiOut Cancelled
-    ## 1       14       -1    SAN  SFO      447    NaN     NaN         0
-    ## 2       29       11    SAN  SFO      447    NaN     NaN         0
+    ## 1       23       11    SAN  SFO      447    NaN     NaN         0
+    ## 2       14       -1    SAN  SFO      447    NaN     NaN         0
     ## 3       -2       -1    SAN  SFO      447    NaN     NaN         0
     ## 4       33       19    SAN  SFO      447    NaN     NaN         0
     ## 5       -1       -2    SAN  SFO      447    NaN     NaN         0
@@ -250,8 +254,8 @@ head(airlines.train)
     ## 5               NA        0          NaN          NaN      NaN
     ## 6               NA        0          NaN          NaN      NaN
     ##   SecurityDelay LateAircraftDelay IsArrDelayed IsDepDelayed
-    ## 1           NaN               NaN          YES           NO
-    ## 2           NaN               NaN          YES          YES
+    ## 1           NaN               NaN          YES          YES
+    ## 2           NaN               NaN          YES           NO
     ## 3           NaN               NaN           NO           NO
     ## 4           NaN               NaN          YES          YES
     ## 5           NaN               NaN           NO           NO
@@ -264,8 +268,8 @@ h2o.table(airlines.train$Cancelled)
 ```
 
     ##   Cancelled Count
-    ## 1         0 36536
-    ## 2         1   914
+    ## 1         0 36374
+    ## 2         1   923
     ## 
     ## [2 rows x 2 columns]
 
@@ -274,8 +278,8 @@ h2o.table(airlines.test$Cancelled)
 ```
 
     ##   Cancelled Count
-    ## 1         0  6356
-    ## 2         1   172
+    ## 1         0  6518
+    ## 2         1   163
     ## 
     ## [2 rows x 2 columns]
 
@@ -310,47 +314,47 @@ summary(airlines.glm)
     ## ==============
     ## 
     ## H2OBinomialModel: glm
-    ## Model Key:  GLM_model_R_1491683399684_15 
+    ## Model Key:  GLM_model_R_1491766252139_9 
     ## GLM Model: summary
     ##     family  link                                regularization
-    ## 1 binomial logit Elastic Net (alpha = 0.5, lambda = 1.505E-4 )
+    ## 1 binomial logit Elastic Net (alpha = 0.5, lambda = 1.528E-4 )
     ##   number_of_predictors_total number_of_active_predictors
-    ## 1                        283                         179
+    ## 1                        283                         173
     ##   number_of_iterations  training_frame
-    ## 1                    5 RTMP_sid_a251_9
+    ## 1                    5 RTMP_sid_aaf4_9
     ## 
     ## H2OBinomialMetrics: glm
     ## ** Reported on training data. **
     ## 
-    ## MSE:  0.214438
-    ## RMSE:  0.4630745
-    ## LogLoss:  0.6178644
-    ## Mean Per-Class Error:  0.3814355
-    ## AUC:  0.7173286
-    ## Gini:  0.4346573
-    ## R^2:  0.1403922
-    ## Null Deviance:  51835.85
-    ## Residual Deviance:  46278.04
-    ## AIC:  46638.04
+    ## MSE:  0.2139357
+    ## RMSE:  0.4625318
+    ## LogLoss:  0.6167004
+    ## Mean Per-Class Error:  0.3868186
+    ## AUC:  0.7182849
+    ## Gini:  0.4365699
+    ## R^2:  0.1418559
+    ## Null Deviance:  51600.2
+    ## Residual Deviance:  46002.15
+    ## AIC:  46350.15
     ## 
     ## Confusion Matrix (vertical: actual; across: predicted) for F1-optimal threshold:
     ##          NO   YES    Error          Rate
-    ## NO     6419 11436 0.640493  =11436/17855
-    ## YES    2398 17197 0.122378   =2398/19595
-    ## Totals 8817 28633 0.369399  =13834/37450
+    ## NO     5896 11766 0.666176  =11766/17662
+    ## YES    2110 17525 0.107461   =2110/19635
+    ## Totals 8006 29291 0.372041  =13876/37297
     ## 
     ## Maximum Metrics: Maximum metrics at their respective thresholds
     ##                         metric threshold    value idx
-    ## 1                       max f1  0.388571 0.713154 291
-    ## 2                       max f2  0.126538 0.846048 386
-    ## 3                 max f0point5  0.543270 0.678653 197
-    ## 4                 max accuracy  0.535220 0.660347 202
-    ## 5                max precision  0.977310 1.000000   0
-    ## 6                   max recall  0.048867 1.000000 399
-    ## 7              max specificity  0.977310 1.000000   0
-    ## 8             max absolute_mcc  0.535220 0.322263 202
-    ## 9   max min_per_class_accuracy  0.525195 0.658471 208
-    ## 10 max mean_per_class_accuracy  0.535220 0.661258 202
+    ## 1                       max f1  0.378584 0.716388 303
+    ## 2                       max f2  0.071329 0.847589 397
+    ## 3                 max f0point5  0.542215 0.680323 206
+    ## 4                 max accuracy  0.538281 0.659785 209
+    ## 5                max precision  0.977203 1.000000   0
+    ## 6                   max recall  0.049356 1.000000 399
+    ## 7              max specificity  0.977203 1.000000   0
+    ## 8             max absolute_mcc  0.539603 0.321631 208
+    ## 9   max min_per_class_accuracy  0.528538 0.657627 216
+    ## 10 max mean_per_class_accuracy  0.539603 0.660966 208
     ## 
     ## Gains/Lift Table: Extract with `h2o.gainsLift(<model>, <data>)` or `h2o.gainsLift(<model>, valid=<T/F>, xval=<T/F>)`
     ## 
@@ -358,39 +362,188 @@ summary(airlines.glm)
     ## 
     ## Scoring History: 
     ##             timestamp   duration iteration negative_log_likelihood
-    ## 1 2017-04-08 23:33:11  0.000 sec         0             25917.92546
-    ## 2 2017-04-08 23:33:11  0.017 sec         1             23238.40917
-    ## 3 2017-04-08 23:33:11  0.032 sec         2             23170.08608
-    ## 4 2017-04-08 23:33:11  0.043 sec         3             23167.15899
-    ## 5 2017-04-08 23:33:11  0.067 sec         4             23137.29854
-    ## 6 2017-04-08 23:33:11  0.079 sec         5             23139.02078
+    ## 1 2017-04-09 21:39:55  0.000 sec         0             25800.10048
+    ## 2 2017-04-09 21:39:55  0.020 sec         1             23119.13142
+    ## 3 2017-04-09 21:39:55  0.031 sec         2             23051.52710
+    ## 4 2017-04-09 21:39:55  0.041 sec         3             23042.83180
+    ## 5 2017-04-09 21:39:55  0.064 sec         4             22999.99694
+    ## 6 2017-04-09 21:39:55  0.073 sec         5             23001.07589
     ##   objective
-    ## 1   0.69207
-    ## 2   0.62541
-    ## 3   0.62432
-    ## 4   0.62431
-    ## 5   0.62390
-    ## 6   0.62390
+    ## 1   0.69175
+    ## 2   0.62462
+    ## 3   0.62352
+    ## 4   0.62349
+    ## 5   0.62274
+    ## 6   0.62275
     ## 
     ## Variable Importances: (Extract with `h2o.varimp`) 
     ## =================================================
     ## 
     ## Standardized Coefficient Magnitudes: standardized coefficient magnitudes
-    ##        names coefficients sign
-    ## 1 Origin.MDW     1.706556  POS
-    ## 2 Origin.AUS     1.395161  NEG
-    ## 3 Origin.HNL     1.355931  NEG
-    ## 4 Origin.LIH     1.204669  NEG
-    ## 5 Origin.MYR     1.103194  NEG
+    ##              names coefficients sign
+    ## 1       Origin.MDW     1.659022  POS
+    ## 2       Origin.AUS     1.409374  NEG
+    ## 3       Origin.HNL     1.366425  NEG
+    ## 4       Origin.MYR     1.229544  NEG
+    ## 5 UniqueCarrier.WN     1.068588  POS
     ## 
     ## ---
     ##                names coefficients sign
-    ## 278       Origin.SWF     0.000000  POS
-    ## 279       Origin.TRI     0.000000  POS
-    ## 280       Origin.TUL     0.000000  POS
-    ## 281       Origin.TYS     0.000000  POS
-    ## 282       Origin.UCA     0.000000  POS
+    ## 278       Origin.TUL     0.000000  POS
+    ## 279       Origin.TYS     0.000000  POS
+    ## 280       Origin.UCA     0.000000  POS
+    ## 281 UniqueCarrier.AA     0.000000  POS
+    ## 282 UniqueCarrier.CO     0.000000  POS
     ## 283 UniqueCarrier.US     0.000000  POS
+
+#### Coefficients
+
+``` r
+h2o.coef(airlines.glm)
+```
+
+    ##        Intercept         Dest.ABE         Dest.ABQ         Dest.ACY 
+    ##     1.291276e+02    -9.382540e-02     5.752754e-01     0.000000e+00 
+    ##         Dest.ALB         Dest.AMA         Dest.ANC         Dest.ATL 
+    ##     5.338895e-02     0.000000e+00     0.000000e+00    -2.439718e-01 
+    ##         Dest.AUS         Dest.AVL         Dest.AVP         Dest.BDL 
+    ##     0.000000e+00     0.000000e+00     0.000000e+00     2.503636e-01 
+    ##         Dest.BGM         Dest.BHM         Dest.BNA         Dest.BOI 
+    ##    -3.431609e-01     1.019893e-01     0.000000e+00     0.000000e+00 
+    ##         Dest.BOS         Dest.BTV         Dest.BUF         Dest.BUR 
+    ##     6.556714e-02    -5.110402e-01    -2.455291e-01    -2.270791e-01 
+    ##         Dest.BWI         Dest.CAE         Dest.CAK         Dest.CHA 
+    ##     3.458565e-01     4.093295e-01     0.000000e+00     0.000000e+00 
+    ##         Dest.CHO         Dest.CHS         Dest.CLE         Dest.CLT 
+    ##     2.552000e-01     1.854474e-01    -3.609488e-01    -3.069741e-01 
+    ##         Dest.CMH         Dest.COS         Dest.CRP         Dest.CVG 
+    ##     2.040259e-01    -5.197023e-01     0.000000e+00     0.000000e+00 
+    ##         Dest.DAL         Dest.DAY         Dest.DCA         Dest.DEN 
+    ##     1.403231e-01    -8.453218e-01     9.464038e-02    -1.426241e-01 
+    ##         Dest.DFW         Dest.DSM         Dest.DTW         Dest.ELM 
+    ##    -2.892888e-01     0.000000e+00     0.000000e+00     0.000000e+00 
+    ##         Dest.ELP         Dest.ERI         Dest.EUG         Dest.EWR 
+    ##     8.642836e-02     0.000000e+00     0.000000e+00     1.579295e-01 
+    ##         Dest.EYW         Dest.FAT         Dest.FAY         Dest.FLL 
+    ##     0.000000e+00     0.000000e+00    -2.388154e-01     5.893518e-01 
+    ##         Dest.FNT         Dest.GEG         Dest.GRR         Dest.GSO 
+    ##     0.000000e+00     1.775269e-01     0.000000e+00     1.269200e-01 
+    ##         Dest.GSP         Dest.HNL         Dest.HOU         Dest.HPN 
+    ##     0.000000e+00    -3.342381e-01     2.170903e-01     0.000000e+00 
+    ##         Dest.HRL         Dest.HTS         Dest.IAD         Dest.IAH 
+    ##     0.000000e+00     0.000000e+00    -3.131784e-01    -4.100514e-01 
+    ##         Dest.ICT         Dest.ILM         Dest.IND         Dest.ISP 
+    ##     0.000000e+00     0.000000e+00    -1.165186e-01    -2.970898e-01 
+    ##         Dest.JAN         Dest.JAX         Dest.JFK         Dest.KOA 
+    ##     0.000000e+00    -1.081263e-01     0.000000e+00     0.000000e+00 
+    ##         Dest.LAS         Dest.LAX         Dest.LBB         Dest.LEX 
+    ##     1.251589e-01     7.669495e-02     0.000000e+00     0.000000e+00 
+    ##         Dest.LGA         Dest.LIH         Dest.LIT         Dest.LYH 
+    ##     9.689315e-02     0.000000e+00     0.000000e+00     5.619095e-01 
+    ##         Dest.MAF         Dest.MCI         Dest.MCO         Dest.MDT 
+    ##     0.000000e+00    -1.453795e-02     4.693706e-01     0.000000e+00 
+    ##         Dest.MDW         Dest.MHT         Dest.MIA         Dest.MKE 
+    ##     3.163336e-01     0.000000e+00    -2.225602e-01    -3.556282e-01 
+    ##         Dest.MRY         Dest.MSP         Dest.MSY         Dest.MYR 
+    ##     0.000000e+00     0.000000e+00     0.000000e+00     0.000000e+00 
+    ##         Dest.OAJ         Dest.OAK         Dest.OGG         Dest.OKC 
+    ##     0.000000e+00     0.000000e+00     0.000000e+00     0.000000e+00 
+    ##         Dest.OMA         Dest.ONT         Dest.ORD         Dest.ORF 
+    ##    -2.886207e-01     1.276933e-01     3.187179e-02    -1.834142e-01 
+    ##         Dest.ORH         Dest.PBI         Dest.PDX         Dest.PHF 
+    ##     0.000000e+00     4.064049e-01     3.258652e-02     0.000000e+00 
+    ##         Dest.PHL         Dest.PHX         Dest.PIT         Dest.PNS 
+    ##     3.433170e-01     1.408293e-01     9.215209e-02    -4.313162e-01 
+    ##         Dest.PSP         Dest.PVD         Dest.PWM         Dest.RDU 
+    ##    -2.769708e-01    -8.119889e-02     0.000000e+00     3.354156e-01 
+    ##         Dest.RIC         Dest.RNO         Dest.ROA         Dest.ROC 
+    ##     0.000000e+00     3.486196e-02    -3.000000e-02     1.221780e-02 
+    ##         Dest.RSW         Dest.SAN         Dest.SAT         Dest.SBN 
+    ##     3.486031e-01    -1.140299e-01     0.000000e+00    -5.632684e-01 
+    ##         Dest.SCK         Dest.SDF         Dest.SEA         Dest.SFO 
+    ##     0.000000e+00     0.000000e+00     0.000000e+00     4.374192e-01 
+    ##         Dest.SJC         Dest.SJU         Dest.SLC         Dest.SMF 
+    ##     1.935174e-01     0.000000e+00     5.643646e-01     5.647974e-01 
+    ##         Dest.SNA         Dest.SRQ         Dest.STL         Dest.STT 
+    ##    -1.240716e-01     0.000000e+00     3.403814e-01     0.000000e+00 
+    ##         Dest.SWF         Dest.SYR         Dest.TOL         Dest.TPA 
+    ##     0.000000e+00     0.000000e+00     0.000000e+00     7.167424e-01 
+    ##         Dest.TUL         Dest.TUS         Dest.UCA       Origin.ABE 
+    ##    -1.447895e-01     2.042760e-01     0.000000e+00     0.000000e+00 
+    ##       Origin.ABQ       Origin.ACY       Origin.ALB       Origin.AMA 
+    ##    -7.314102e-01    -5.148680e-01     4.437672e-01     0.000000e+00 
+    ##       Origin.ANC       Origin.ATL       Origin.AUS       Origin.AVP 
+    ##     0.000000e+00     7.626115e-01    -1.409374e+00    -4.758378e-01 
+    ##       Origin.BDL       Origin.BGM       Origin.BHM       Origin.BIL 
+    ##     4.078809e-01     0.000000e+00    -6.550801e-01     0.000000e+00 
+    ##       Origin.BNA       Origin.BOI       Origin.BOS       Origin.BTV 
+    ##    -7.882028e-01    -6.592532e-01     2.065238e-01     7.626893e-02 
+    ##       Origin.BUF       Origin.BUR       Origin.BWI       Origin.CAE 
+    ##    -7.833307e-04    -9.183494e-01     0.000000e+00     0.000000e+00 
+    ##       Origin.CHO       Origin.CHS       Origin.CLE       Origin.CLT 
+    ##     5.411266e-02     1.227903e-02    -2.561503e-01     9.062975e-02 
+    ##       Origin.CMH       Origin.COS       Origin.CRP       Origin.CRW 
+    ##     3.732471e-01    -7.255725e-02     0.000000e+00    -6.216575e-01 
+    ##       Origin.CVG       Origin.DAL       Origin.DAY       Origin.DCA 
+    ##     0.000000e+00    -2.978608e-05     2.899066e-01     1.889962e-01 
+    ##       Origin.DEN       Origin.DFW       Origin.DSM       Origin.DTW 
+    ##     2.989747e-01     2.605340e-01     0.000000e+00     0.000000e+00 
+    ##       Origin.EGE       Origin.ELP       Origin.ERI       Origin.EWR 
+    ##     4.745739e-01     0.000000e+00     4.909474e-01    -1.367440e-01 
+    ##       Origin.EYW       Origin.FLL       Origin.GEG       Origin.GNV 
+    ##     0.000000e+00     2.516594e-01     0.000000e+00     0.000000e+00 
+    ##       Origin.GRR       Origin.GSO       Origin.HNL       Origin.HOU 
+    ##     0.000000e+00    -2.880636e-01    -1.366425e+00     0.000000e+00 
+    ##       Origin.HPN       Origin.HRL       Origin.IAD       Origin.IAH 
+    ##     1.062251e+00     0.000000e+00    -4.012148e-01    -8.625062e-01 
+    ##       Origin.ICT       Origin.IND       Origin.ISP       Origin.JAN 
+    ##     0.000000e+00     4.398666e-01     0.000000e+00     0.000000e+00 
+    ##       Origin.JAX       Origin.JFK       Origin.KOA       Origin.LAN 
+    ##     0.000000e+00    -4.493390e-01     0.000000e+00     0.000000e+00 
+    ##       Origin.LAS       Origin.LAX       Origin.LBB       Origin.LEX 
+    ##     8.226481e-02     5.715561e-01     0.000000e+00     6.616219e-01 
+    ##       Origin.LGA       Origin.LIH       Origin.LIT       Origin.LYH 
+    ##     5.732641e-01    -1.010628e+00     0.000000e+00     2.552000e-01 
+    ##       Origin.MAF       Origin.MCI       Origin.MCO       Origin.MDT 
+    ##     0.000000e+00     2.152820e-01     5.377119e-01     0.000000e+00 
+    ##       Origin.MDW       Origin.MEM       Origin.MFR       Origin.MHT 
+    ##     1.659022e+00    -2.165849e-01     0.000000e+00     3.920004e-02 
+    ##       Origin.MIA       Origin.MKE       Origin.MLB       Origin.MRY 
+    ##     6.621497e-01    -1.532114e-01     0.000000e+00    -5.270977e-01 
+    ##       Origin.MSP       Origin.MSY       Origin.MYR       Origin.OAK 
+    ##     0.000000e+00     0.000000e+00    -1.229544e+00    -3.091158e-01 
+    ##       Origin.OGG       Origin.OKC       Origin.OMA       Origin.ONT 
+    ##    -6.371593e-01    -2.116236e-01     5.358549e-01     2.294911e-01 
+    ##       Origin.ORD       Origin.ORF       Origin.PBI       Origin.PDX 
+    ##     6.306301e-01     1.641701e-01     6.630793e-01     3.239376e-01 
+    ##       Origin.PHF       Origin.PHL       Origin.PHX       Origin.PIT 
+    ##     0.000000e+00     3.148032e-01    -1.097209e-01     3.627546e-01 
+    ##       Origin.PSP       Origin.PVD       Origin.PWM       Origin.RDU 
+    ##     9.337114e-01     1.030321e-01    -5.140137e-01     0.000000e+00 
+    ##       Origin.RIC       Origin.RNO       Origin.ROA       Origin.ROC 
+    ##     0.000000e+00     5.583580e-01     0.000000e+00     3.337588e-01 
+    ##       Origin.RSW       Origin.SAN       Origin.SAT       Origin.SAV 
+    ##     0.000000e+00    -1.979581e-01     3.709758e-01    -4.314735e-01 
+    ##       Origin.SBN       Origin.SCK       Origin.SDF       Origin.SEA 
+    ##     0.000000e+00     0.000000e+00     0.000000e+00     1.589224e-02 
+    ##       Origin.SFO       Origin.SJC       Origin.SJU       Origin.SLC 
+    ##     1.908982e-01     0.000000e+00    -2.570480e-01    -5.871966e-01 
+    ##       Origin.SMF       Origin.SNA       Origin.SRQ       Origin.STL 
+    ##    -1.113944e-01    -1.852514e-01     4.499531e-01    -6.670350e-01 
+    ##       Origin.STT       Origin.STX       Origin.SWF       Origin.SYR 
+    ##     0.000000e+00     1.509223e-01     0.000000e+00     4.601462e-01 
+    ##       Origin.TLH       Origin.TPA       Origin.TRI       Origin.TUL 
+    ##    -7.251428e-01     1.483083e-01     0.000000e+00     0.000000e+00 
+    ##       Origin.TUS       Origin.TYS       Origin.UCA UniqueCarrier.AA 
+    ##    -2.410321e-01     0.000000e+00     0.000000e+00     0.000000e+00 
+    ## UniqueCarrier.CO UniqueCarrier.DL UniqueCarrier.HP UniqueCarrier.PI 
+    ##     0.000000e+00     2.918171e-01    -5.265586e-01    -4.488677e-02 
+    ## UniqueCarrier.PS UniqueCarrier.TW UniqueCarrier.UA UniqueCarrier.US 
+    ##    -3.472455e-01     6.608095e-01    -2.394169e-01     0.000000e+00 
+    ## UniqueCarrier.WN             Year            Month       DayofMonth 
+    ##     1.068588e+00    -6.512592e-02     4.200452e-02    -3.191920e-02 
+    ##        DayOfWeek          DepTime          ArrTime         Distance 
+    ##     3.032250e-02     7.788883e-04    -5.947842e-05     2.825392e-04
 
 #### Variable Importances
 
@@ -399,20 +552,20 @@ h2o.varimp(airlines.glm)
 ```
 
     ## Standardized Coefficient Magnitudes: standardized coefficient magnitudes
-    ##        names coefficients sign
-    ## 1 Origin.MDW     1.706556  POS
-    ## 2 Origin.AUS     1.395161  NEG
-    ## 3 Origin.HNL     1.355931  NEG
-    ## 4 Origin.LIH     1.204669  NEG
-    ## 5 Origin.MYR     1.103194  NEG
+    ##              names coefficients sign
+    ## 1       Origin.MDW     1.659022  POS
+    ## 2       Origin.AUS     1.409374  NEG
+    ## 3       Origin.HNL     1.366425  NEG
+    ## 4       Origin.MYR     1.229544  NEG
+    ## 5 UniqueCarrier.WN     1.068588  POS
     ## 
     ## ---
     ##                names coefficients sign
-    ## 278       Origin.SWF     0.000000  POS
-    ## 279       Origin.TRI     0.000000  POS
-    ## 280       Origin.TUL     0.000000  POS
-    ## 281       Origin.TYS     0.000000  POS
-    ## 282       Origin.UCA     0.000000  POS
+    ## 278       Origin.TUL     0.000000  POS
+    ## 279       Origin.TYS     0.000000  POS
+    ## 280       Origin.UCA     0.000000  POS
+    ## 281 UniqueCarrier.AA     0.000000  POS
+    ## 282 UniqueCarrier.CO     0.000000  POS
     ## 283 UniqueCarrier.US     0.000000  POS
 
 #### Predict using GLM model
@@ -440,9 +593,9 @@ summary(pred)
     ## parameter.
 
     ##  predict   NO                YES              
-    ##  YES:5057  Min.   :0.03297   Min.   :0.05274  
-    ##  NO :1471  1st Qu.:0.33834   1st Qu.:0.40383  
-    ##            Median :0.46543   Median :0.53366  
-    ##            Mean   :0.47147   Mean   :0.52853  
-    ##            3rd Qu.:0.59526   3rd Qu.:0.66075  
-    ##            Max.   :0.94726   Max.   :0.96703
+    ##  YES:5263  Min.   :0.03084   Min.   :0.05083  
+    ##  NO :1418  1st Qu.:0.34032   1st Qu.:0.40163  
+    ##            Median :0.46797   Median :0.53111  
+    ##            Mean   :0.47487   Mean   :0.52513  
+    ##            3rd Qu.:0.59745   3rd Qu.:0.65876  
+    ##            Max.   :0.94917   Max.   :0.96916
