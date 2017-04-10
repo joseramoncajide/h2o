@@ -1,0 +1,128 @@
+---
+title: "Untitled"
+author: '@jrcajide'
+date: "9/4/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(ggplot2)
+library(data.table)
+library(h2o)
+
+h2o.init(ip = "46.101.126.146")
+```
+
+```{r}
+wnb.hex = h2o.uploadFile(path = "./data/wnb.csv", destination_frame = "wnb.hex")
+```
+
+```{r}
+wnb.hex$C1 <- NULL
+```
+
+```{r}
+summary(wnb.hex)
+```
+
+```{r}
+wnb.split <- h2o.splitFrame(data = wnb.hex, ratios = 0.75)
+```
+
+```{r}
+# Creates training set from 1st data set in split
+wnb.train <- wnb.split[[1]]
+# Creates testing set from 2st data set in split
+wnb.test <- wnb.split[[2]]
+```
+
+```{r}
+head(wnb.train)
+```
+
+```{r}
+Y = "Class"
+X = setdiff(names(wnb.train), "Class")
+```
+
+```{r}
+wnb.glm <- h2o.glm(training_frame=wnb.train, x=X, y=Y, family = "binomial", alpha = 0.5)
+```
+
+```{r}
+summary(wnb.glm)
+```
+```{r}
+h2o.varimp(wnb.glm)
+```
+
+```{r}
+# Predict using GLM model
+pred = h2o.predict(object = wnb.glm, newdata = wnb.test)
+# Look at summary of predictions: probability of TRUE class (p1)
+summary(pred)
+```
+
+```{r}
+h2o.auc(wnb.glm)
+```
+
+```{r}
+h2o.confusionMatrix(object = wnb.glm, threshold = 0.3)
+```
+
+```{r}
+auc <- h2o.auc(wnb.glm, valid = TRUE)
+fpr <- h2o.fpr( h2o.performance(wnb.glm, valid = F) )[['fpr']]
+tpr <- h2o.tpr( h2o.performance(wnb.glm, valid = F) )[['tpr']]
+ggplot( data.table(fpr = fpr, tpr = tpr), aes(fpr, tpr) ) + 
+geom_line() + theme_bw() + ggtitle( sprintf('AUC: %f', auc) )
+```
+
+
+```{r}
+h2o.download_pojo(wnb.glm, getwd())
+```
+
+
+```{r}
+system("curl -X POST --data '{travelers: 2, avg_session_duration: 0}' 46.101.126.146:60582/predict")
+```
+
+
+```{r}
+system("curl -X POST --data-binary @data/wnb_new_data.json  http://46.101.126.146:60582/predict", wait = T)
+```
+
+
+#### GBM
+
+```{r}
+wnb.gbm <- h2o.gbm(y = 1, x = 2:5, training_frame = wnb.train, ntrees = 10,
+                    max_depth = 3,min_rows = 2, learn_rate = 0.2, distribution= "gaussian")
+
+# To obtain the Mean-squared Error by tree from the model object:
+wnb.gbm@model$scoring_history
+```
+
+```{r}
+perf <- h2o.performance(wnb.gbm, newdata = wnb.test)
+print(perf)
+```
+
+```{r}
+pred_hf <- h2o.predict(wnb.gbm, newdata = wnb.test)
+head(pred_hf)
+```
+
+```{r}
+plot(wnb.glm)
+```
+
+
+
